@@ -1,0 +1,6 @@
+*.swp
+.cmake
+
+bin/
+CMakeFiles/
+
