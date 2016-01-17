@@ -5,6 +5,7 @@ File containing the library of simple gates that will make up the NNs.
 """
 
 import math
+import numpy as np
 
 class Gate:
   """
@@ -17,9 +18,9 @@ class Gate:
     Creates a new gate instance with the supplied inputs.
     """
     self.numInputs  = inputs
-    self.inputs     = [0] * self.numInputs
-    self.weights    = [1] * self.numInputs
-    self.gradients  = [0] * self.numInputs
+    self.inputs     = np.array([0.0] * self.numInputs)
+    self.weights    = np.array([1.0] * self.numInputs)
+    self.gradients  = np.array([0.0] * self.numInputs)
     self.output     =  0
 
   def setWeight(self, i, val):
@@ -58,3 +59,48 @@ class Gate:
     return self.output
 
 
+class GateAdd (Gate):
+  """
+  A simple addition gate that sums all of it's inputs.
+  """
+
+  def computeForward(self):
+    """
+    Computes the forward pass of the gate by summing the products
+    of every input and it's associated weight. Sets the internal
+    field output to the computed value.
+    """
+    self.output = sum(self.inputs * self.weights)
+
+  def computeBackward(self):
+    """
+    Computes the gradient of the output with respect to all inputs.
+    For the add gate, this is just the weight assigned to each input.
+    """
+    self.gradients = self.weights
+
+class GateMul (Gate):
+  """
+  A simple multiplication gate that returns the weighted dot product
+  of it's inputs.
+  """
+
+  def computeForward(self):
+    """
+    Computes the forward pass of the gate by working out the
+    dot product of all inputs multiplied by their respective weights.
+    """
+    self.output = (self.inputs * self.weights).dot()
+
+  def computeBackward(self):
+    """
+    Computes the gradient of the output with respect to all inputs.
+    For the add gate, this is just the weight assigned to each input.
+    """
+    for i in range(0, self.numInputs):
+      tmpIn             = self.inputs
+      tmpWeight         = self.weights
+      w                 = tmpWeight[i]
+      del tmpIn[i]
+      del tmpWeight[i]
+      self.gradients[i] = (tmpIn * tmpWeight).dot() * w
