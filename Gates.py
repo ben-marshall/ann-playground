@@ -90,7 +90,7 @@ class GateMul (Gate):
     Computes the forward pass of the gate by working out the
     dot product of all inputs multiplied by their respective weights.
     """
-    self.output = (self.inputs * self.weights).dot()
+    self.output = np.prod(self.inputs * self.weights)
 
   def computeBackward(self):
     """
@@ -103,4 +103,4 @@ class GateMul (Gate):
       w                 = tmpWeight[i]
       del tmpIn[i]
       del tmpWeight[i]
-      self.gradients[i] = (tmpIn * tmpWeight).dot() * w
+      self.gradients[i] = np.prod(tmpIn * tmpWeight) * w

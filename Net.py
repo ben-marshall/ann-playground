@@ -45,6 +45,7 @@ class CustomNet:
         """
         Overridable function that should construct the network.
         """
+        print("[ERROR] Function not overriden. This network is empty.")
         pass
 
     def evaluateForward(self):
@@ -52,6 +53,7 @@ class CustomNet:
         Update the output values of the network to refelect changes to the
         weights or inputs.
         """
+        print("[ERROR] Function not overriden. This network is empty.")
         pass
 
     def evaluateBackward(self):
@@ -59,16 +61,60 @@ class CustomNet:
         Computes the gradients for all cells and alters the weights associated
         with them ready for the next pass.
         """
+        print("[ERROR] Function not overriden. This network is empty.")
         pass
 
     def setInput(self, i, val):
         """
         Sets the value of an input to val.
         """
-        self.inputCells[i] = val
+        self.inputValues[i] = val
+
+    def setInputs(self,vals):
+        """
+        Sets the value of all inputs. Note vals must be an np.array type.
+        """
+        self.inputValues = vals
 
     def getOutput(self, i):
         """
         Returns the value of output i.
         """
-        return self.outputCells[i]
+        return self.outputValues[i]
+
+
+class ToyNet(CustomNet):
+    """
+    Toy example network from the "Hackers guide to neural networks tutorial"
+    http://karpathy.github.io/neuralnets/
+    """
+
+    def __init__(self):
+        """
+        Override the default constructor with fixed numbers of inputs
+        and outputs. Three inputs, one output.
+        """
+        super().__init__(3, 1)
+
+    def build(self):
+        """
+        Construct the same circuit as shown in the tutorial.
+        """
+        self.addGate = Gates.GateAdd(2)
+        self.mulGate = Gates.GateMul(2)
+
+    def evaluateForward(self):
+        """
+        Run the forward pass on the network.
+        """
+
+        self.addGate.setIn(0,self.inputValues[0])
+        self.addGate.setIn(1,self.inputValues[1])
+        self.addGate.computeForward()
+
+        self.mulGate.setIn(0, self.addGate.getOutput())
+        self.mulGate.setIn(1, self.inputValues[2])
+        self.mulGate.computeForward()
+
+        self.outputValues[0] = self.mulGate.getOutput()
+
