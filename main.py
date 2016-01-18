@@ -37,16 +37,13 @@ def main():
         toy.evaluateBackward()
 
         dx,dy,dz = [toy.getGradient(0,0),toy.getGradient(0,1),toy.getGradient(0,2)]
-        sys.stdout.write("Gradients: dX=%f,dY=%f,dZ=%f" % (dx,dy,dz))
+        sys.stdout.write("Gradients: dX=%f,dY=%f,dZ=%f\n" % (dx,dy,dz))
 
-        if(result != (x+y)*z):
-            print("\t[FAIL]")
-        else:
-            print("\t[PASS]")
+        toy.updateWeights()
         
-        x = x + step_size * dx
-        y = y + step_size * dy
-        z = z + step_size * dz
+        #x = x + step_size * dx
+        #y = y + step_size * dy
+        #z = z + step_size * dz
 
 if(__name__=="__main__"):
     main()

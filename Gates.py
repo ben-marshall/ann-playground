@@ -29,6 +29,12 @@ class Gate:
     """
     self.weights[i] = val
 
+  def updateWeight(self, i, gradient, step = 0.01):
+    """
+    Updates an input weighting based on the supplied gradient and step size.
+    """
+    self.weights[i] = self.weights[i] + gradient*step
+
   def setIn(self, i, val):
     """
     Set the value of an input.

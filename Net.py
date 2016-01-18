@@ -139,15 +139,25 @@ class ToyNet(CustomNet):
         self.mulGate.computeBackward()
         self.addGate.computeBackward()
 
-        df_wrt_z = self.addGate.getOutput()
-        df_wrt_q = self.inputValues[2]
+        self.df_wrt_q = self.inputValues[2]
+        self.df_wrt_z = self.addGate.getOutput()
 
-        dq_wrt_x = self.addGate.gradients[0]
-        dq_wrt_y = self.addGate.gradients[1]
+        self.dq_wrt_x = self.addGate.gradients[0]
+        self.dq_wrt_y = self.addGate.gradients[1]
         
-        # df_dx
-        self.gradients[0][0] = df_wrt_q * dq_wrt_x
-        self.gradients[1][0] = df_wrt_q * dq_wrt_y
-        self.gradients[2][0] = df_wrt_z
+        self.gradients[0][0] = self.df_wrt_q * self.dq_wrt_x
+        self.gradients[1][0] = self.df_wrt_q * self.dq_wrt_y
+        self.gradients[2][0] = self.df_wrt_z
 
+    def updateWeights(self, multiplier = 1):
+        """
+        Toy network function that updates the weights based on the
+        computed gradients of each function.
+        """
+        
+        self.mulGate.updateWeight(0, multiplier * self.df_wrt_q)
+        self.mulGate.updateWeight(1, multiplier * self.df_wrt_z)
+        
+        self.addGate.updateWeight(0, multiplier * self.gradients[0][0])
+        self.addGate.updateWeight(1, multiplier * self.gradients[1][0])
 
