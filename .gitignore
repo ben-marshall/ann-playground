@@ -3,4 +3,5 @@
 
 bin/
 CMakeFiles/
+*__pycache__*
 
