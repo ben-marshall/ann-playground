@@ -38,6 +38,7 @@ class CustomNet:
         """
         self.inputValues    = np.array([0.0] * inputCells)
         self.outputValues   = np.array([0.0] * outputCells)
+        self.gradients      = np.ones((inputCells, outputCells))
 
         self.build()
 
@@ -64,6 +65,13 @@ class CustomNet:
         print("[ERROR] Function not overriden. This network is empty.")
         pass
 
+    def getGradient(self, outputVal, inputVal):
+        """
+        Returns the gradient of the given output value with respect to the
+        given input value. Both are indicies.
+        """
+        return self.gradients[inputVal][outputVal]
+
     def setInput(self, i, val):
         """
         Sets the value of an input to val.
@@ -87,6 +95,10 @@ class ToyNet(CustomNet):
     """
     Toy example network from the "Hackers guide to neural networks tutorial"
     http://karpathy.github.io/neuralnets/
+    Inputs: X,Y,Z
+    Output: F
+    Q = X+Y
+    F = Q*Z
     """
 
     def __init__(self):
@@ -117,4 +129,25 @@ class ToyNet(CustomNet):
         self.mulGate.computeForward()
 
         self.outputValues[0] = self.mulGate.getOutput()
+
+    def evaluateBackward(self):
+        """
+        Evaluate the gradient of the output values with respect to
+        each input value.
+        """
+
+        self.mulGate.computeBackward()
+        self.addGate.computeBackward()
+
+        df_wrt_z = self.addGate.getOutput()
+        df_wrt_q = self.inputValues[2]
+
+        dq_wrt_x = self.addGate.gradients[0]
+        dq_wrt_y = self.addGate.gradients[1]
+        
+        # df_dx
+        self.gradients[0][0] = df_wrt_q * dq_wrt_x
+        self.gradients[1][0] = df_wrt_q * dq_wrt_y
+        self.gradients[2][0] = df_wrt_z
+
 

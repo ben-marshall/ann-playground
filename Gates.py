@@ -35,6 +35,12 @@ class Gate:
     """
     self.inputs[i] = val
 
+  def getWeightedInput(self, i):
+    """
+    Returns the weighted value of the input.
+    """
+    return self.inputs[i] * self.weights[i]
+
   def computeForward(self):
     """
     Given the current inputs and weights, compute the output of the
@@ -77,7 +83,8 @@ class GateAdd (Gate):
     Computes the gradient of the output with respect to all inputs.
     For the add gate, this is just the weight assigned to each input.
     """
-    self.gradients = self.weights
+    for i in range(0, self.numInputs):
+        self.gradients[i] = self.weights[i]
 
 class GateMul (Gate):
   """
@@ -98,9 +105,6 @@ class GateMul (Gate):
     For the add gate, this is just the weight assigned to each input.
     """
     for i in range(0, self.numInputs):
-      tmpIn             = self.inputs
-      tmpWeight         = self.weights
-      w                 = tmpWeight[i]
-      del tmpIn[i]
-      del tmpWeight[i]
-      self.gradients[i] = np.prod(tmpIn * tmpWeight) * w
+      self.gradients[i] = 1
+      for j in range(0, self.numInputs):
+        self.gradients[i] *= self.inputs[j] * self.weights[i]
