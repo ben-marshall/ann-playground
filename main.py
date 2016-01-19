@@ -12,9 +12,9 @@ import numpy as np
 import Net
 import Gates
 
-def main():
+def toy():
     """
-    Main function for the script.
+    Toy network demonstration function.
     """
 
     toy = Net.ToyNet()
@@ -44,6 +44,19 @@ def main():
         #x = x + step_size * dx
         #y = y + step_size * dy
         #z = z + step_size * dz
+
+def main():
+    """
+    Main function for the script.
+    """
+    
+    toy = Net.Net(3, layers=[2,1])
+    inputs = [1.0,2.0,3.0]
+    toy.forward(inputs)
+    result = toy.getOutput()
+    sys.stdout.write("Inputs: %s, output = %s " % (str(inputs), str(result)))
+    print("")
+
 
 if(__name__=="__main__"):
     main()
