@@ -29,7 +29,13 @@ class BetterNet:
         self.weights        = [None] * self.numLayers
         self.biases         = [None] * self.numLayers
         self.activations    = [None] * self.numLayers
+
+        # Input layer
         self.activations[0] = np.matrix([0.0] * layerSizes[0])
+        self.biases[0]      = np.matrix([0.0] * layerSizes[0])
+        self.weights[0]     = np.matrix([[1.0] * layerSizes[0]]*layerSizes[0])
+
+        # Weighted input to every neuron, prior to being "sigmoided".
         self.Z              = [None] * self.numLayers
 
         for L in range(1, self.numLayers):
@@ -39,6 +45,29 @@ class BetterNet:
             self.weights[L]     = np.matrix([[0.0] * layerSizes[L-1]]*layerSizes[L])
             self.biases[L]      = np.matrix([0.0] * layerSizes[L])
             self.activations[L] = np.matrix([0.0] * layerSizes[L])
+
+    def backward(self, desiredOutputs):
+        """
+        Perform a backward pass on the network and return a tuple of
+        gradients with respect to all biases and weights.
+        """
+        nabla_b = [np.zeros(b.shape) for b in self.biases ]
+        nabla_w = [np.zeros(w.shape) for w in self.weights]
+
+        delta = (self.activations[-1] - desiredOutputs) * self.dSigmoid(self.Z[-1])
+
+        nabla_b[-1] = delta
+        nabla_w[-1] = np.dot(delta.transpose(), self.activations[-2])
+
+        for l in range(2, self.numLayers):
+            print(">>> %d" % l)
+            z   = self.Z[-l]
+            sp  = self.dSigmoid(z)
+            delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
+            nabla_b[-l] = delta
+            nabla_w[-l] = np.dot(delta, self.activations[-l-1].transpose())
+        return (nabla_b, nabla_w)
+
 
     def forward(self):
         """
@@ -50,6 +79,14 @@ class BetterNet:
             self.Z[L] = self.Z[L]  + self.biases[L]
             self.activations[L] = self.sigmoid(self.Z[L])
 
+
+    def dSigmoid(self, x):
+        a = self.sigmoid(x).transpose()
+        b = 1- self.sigmoid(x)
+        print()
+        print(a)
+        print(b)
+        return a*b
 
     def sigmoid(self, x):
         return 1.0/(1.0+np.exp(-x))
@@ -70,6 +107,16 @@ def main():
     print(toy.activations)
 
     toy.forward()
+    print("-------------------")
+
+    print("Weights:")
+    print(toy.weights)
+    print("Biases:")
+    print(toy.biases)
+    print("Activations:")
+    print(toy.activations)
+
+    toy.backward(np.array([-1,4]))
     print("-------------------")
 
     print("Weights:")
