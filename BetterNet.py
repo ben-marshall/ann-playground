@@ -6,6 +6,9 @@ Contains classes for creating a neural network.
 
 import sys
 import math
+import random
+
+from tqdm import tqdm
 import numpy as np
 
 import Gates
@@ -25,108 +28,118 @@ class BetterNet:
         Assumes that there are atleast two layers.
         """
 
-        self.numLayers      = len(layerSizes)
-        self.weights        = [None] * self.numLayers
-        self.biases         = [None] * self.numLayers
-        self.activations    = [None] * self.numLayers
+        self.L          = len(layerSizes)   # The number of layers in the net
+        self.W          = [None] * self.L   # The weights of each layer
+        self.B          = [None] * self.L   # The biases of each layer
+        self.A          = [None] * self.L   # The activation values of nodes.
+        self.Z          = [None] * self.L   # Weighted input to neurons.
+        self.dW         = [None] * self.L
+        self.dB         = [None] * self.L
+        self.dL         = [None] * self.L
 
-        # Input layer
-        self.activations[0] = np.matrix([0.0] * layerSizes[0])
-        self.biases[0]      = np.matrix([0.0] * layerSizes[0])
-        self.weights[0]     = np.matrix([[1.0] * layerSizes[0]]*layerSizes[0])
+        for layer in range(0, self.L):
+            rows          = layerSizes[layer]
+            cols          = layerSizes[layer-1] if layer > 0 else rows
 
-        # Weighted input to every neuron, prior to being "sigmoided".
-        self.Z              = [None] * self.numLayers
+            # layer size * previous layer size
+            self.W[layer] = np.matrix([[1.0]*cols]*rows)
+            # layer size * 1
+            self.B[layer] = np.matrix([[0.0]]*rows)
+            # layer size * 1
+            self.A[layer] = np.matrix([[0.0]]*rows)
+            self.Z[layer] = np.matrix([[0.0]]*rows)
+            self.dB[layer] = np.matrix([[0.0]]*rows)
+            self.dW[layer] = np.matrix([[0.0]]*rows)
+            self.dL[layer] = np.matrix([[0.0]]*rows)
 
-        for L in range(1, self.numLayers):
-            # Initialise each element of the weights, biases and activations
-            # lists with the appropriate values.
-            
-            self.weights[L]     = np.matrix([[0.0] * layerSizes[L-1]]*layerSizes[L])
-            self.biases[L]      = np.matrix([0.0] * layerSizes[L])
-            self.activations[L] = np.matrix([0.0] * layerSizes[L])
-
-    def backward(self, desiredOutputs):
+    def setInput(self, I, val):
         """
-        Perform a backward pass on the network and return a tuple of
-        gradients with respect to all biases and weights.
+        Sets the value of the Ith input to the net.
         """
-        nabla_b = [np.zeros(b.shape) for b in self.biases ]
-        nabla_w = [np.zeros(w.shape) for w in self.weights]
+        self.A[0][I] = val
 
-        delta = (self.activations[-1] - desiredOutputs) * self.dSigmoid(self.Z[-1])
-
-        nabla_b[-1] = delta
-        nabla_w[-1] = np.dot(delta.transpose(), self.activations[-2])
-
-        for l in range(2, self.numLayers):
-            print(">>> %d" % l)
-            z   = self.Z[-l]
-            sp  = self.dSigmoid(z)
-            delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
-            nabla_b[-l] = delta
-            nabla_w[-l] = np.dot(delta, self.activations[-l-1].transpose())
-        return (nabla_b, nabla_w)
-
+    def getOutput(self):
+        """
+        Returns the output values of the network
+        """
+        return self.A[self.L-1]
 
     def forward(self):
         """
-        Computes a forward pass on the network.
+        Perform a forward pass on the network.
         """
+        
+        for l in range(1, self.L):
+            # iterate forwards over the layers computing each activation.
+            # Since layer 0 is the input layer, start computing at layer 1
+            self.Z[l]   = self.W[l] * self.A[l-1] + self.B[l]
+            self.A[l]   = sigmoid(self.Z[l])
+       
+       # The output is now in self.A[self.L - 1]
 
-        for L in range(1, self.numLayers):
-            self.Z[L] = np.dot(self.activations[L-1],self.weights[L].transpose())
-            self.Z[L] = self.Z[L]  + self.biases[L]
-            self.activations[L] = self.sigmoid(self.Z[L])
 
+    def backward(self, expected):
+        """
+        Perform a backward pass on the network.
+        """
+        # First compute the error in the output at the last layer.
+        err = self.A[self.L-1] - expected
+        self.dL[self.L-1] = (err) * dSigmoid(self.Z[self.L-1])
+        self.dB[self.L-1] = self.dL[self.L-1]
+        self.dW[self.L-1] = self.dB[self.L-1] * self.A[self.L-2].transpose()
 
-    def dSigmoid(self, x):
-        a = self.sigmoid(x).transpose()
-        b = 1- self.sigmoid(x)
-        print()
-        print(a)
-        print(b)
-        return a*b
+        for l in range(self.L-2, 0, -1):
+            ds = dSigmoid(self.Z[l])
+            self.dL[l] = (self.W[l+1].transpose() * self.dL[l+1])
+            self.dB[l] = np.multiply(self.dL[l], ds)
+            self.dW[l] = self.dB[l] * self.A[l-1].transpose()
 
-    def sigmoid(self, x):
-        return 1.0/(1.0+np.exp(-x))
+    def modWeights(self, stepSize = -0.01):
+        """
+        Modifies the weights and biases according to the given gradients and
+        step sizes.
+        """
+        for l in range(0, self.L):
+            for N in range(0, len(self.W[l])):
+                self.W[l][N] = self.W[l][N] + (self.dW[l][N] * stepSize)
+                self.B[l][N] = self.B[l][N] + (self.dB[l][N] * stepSize)
+        
+
+def dSigmoid( x):
+    a = 1-sigmoid(x)
+    b = sigmoid(x)
+    return b.transpose()*a
+
+def sigmoid(x):
+    return 1.0/(1.0+np.exp(-x))
 
 def main():
     """
     Main function for the script.
     """
-    
-    toy = BetterNet(layerSizes=[3,4,2])
-    print("Network Size: %d Bytes" % sys.getsizeof(toy))
+ 
+    print("----------------Start---------------------------")
+    layerSizes=[3,2,1]
+    toy = BetterNet(layerSizes)
+    X = 0.5
+    Y = 0.8
+    Z = -0.3
+    toy.setInput(0, X)
+    toy.setInput(1, Y)
+    toy.setInput(2, Z)
 
-    print("Weights:")
-    print(toy.weights)
-    print("Biases:")
-    print(toy.biases)
-    print("Activations:")
-    print(toy.activations)
+    tgt = sigmoid(X*Y-Z)
 
-    toy.forward()
-    print("-------------------")
+    for i in tqdm(range(0,10000)):
+        
+        toy.forward()
+        toy.backward(np.matrix([tgt]))
+        toy.modWeights(stepSize=-0.01)
 
-    print("Weights:")
-    print(toy.weights)
-    print("Biases:")
-    print(toy.biases)
-    print("Activations:")
-    print(toy.activations)
+        result = toy.A[toy.L-1][0]
+        print("%f %f %f" % (result, tgt, abs((result - tgt))))
 
-    toy.backward(np.array([-1,4]))
-    print("-------------------")
-
-    print("Weights:")
-    print(toy.weights)
-    print("Biases:")
-    print(toy.biases)
-    print("Activations:")
-    print(toy.activations)
-
-
+    print("----------------End-----------------------------")
 
 if(__name__=="__main__"):
     main()
