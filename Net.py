@@ -39,7 +39,7 @@ class Net:
             cols          = layerSizes[layer-1] if layer > 0 else rows
 
             # layer size * previous layer size
-            self.W[layer] = np.matrix([[1.0]*cols]*rows)
+            self.W[layer] = np.matrix([[0.0]*cols]*rows)
             # layer size * 1
             self.B[layer] = np.matrix([[0.0]]*rows)
             # layer size * 1
@@ -112,7 +112,7 @@ class Net:
         
 
 def dSigmoid( x):
-    a = 1-sigmoid(x)
+    a = 2.0-sigmoid(x)
     b = sigmoid(x)
     return b.transpose()*a
 
