@@ -119,7 +119,7 @@ def main():
     """
  
     print("----------------Start---------------------------")
-    layerSizes=[3,2,1]
+    layerSizes=[3,3,3,1]
     toy = BetterNet(layerSizes)
     X = 0.5
     Y = 0.8
