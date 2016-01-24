@@ -39,16 +39,16 @@ class Net:
             cols          = layerSizes[layer-1] if layer > 0 else rows
 
             # layer size * previous layer size
-            self.W[layer] = np.matrix([[0.0]*cols]*rows)
+            self.W[layer] = np.matrix([[0.0]*cols]*rows, dtype=np.float64)
             # layer size * 1
-            self.B[layer] = np.matrix([[0.0]]*rows)
+            self.B[layer] = np.matrix([[0.0]]*rows, dtype=np.float64)
             # layer size * 1
-            self.A[layer] = np.matrix([[0.0]]*rows)
-            self.Z[layer] = np.matrix([[0.0]]*rows)
-            self.dB[layer] = np.matrix([[0.0]]*rows)
-            self.dW[layer] = np.matrix([[0.0]]*rows)
-            self.dL[layer] = np.matrix([[0.0]]*rows)
-
+            self.A[layer] = np.matrix([[0.0]]*rows, dtype=np.float64)
+            self.Z[layer] = np.matrix([[0.0]]*rows, dtype=np.float64)
+            self.dB[layer] = np.matrix([[0.0]]*rows, dtype=np.float64)
+            self.dW[layer] = np.matrix([[0.0]]*rows, dtype=np.float64)
+            self.dL[layer] = np.matrix([[0.0]]*rows, dtype=np.float64)
+            
     def setInputs(self, values):
         """
         Sets all of the inputs to the supplied values. Values should be
@@ -100,6 +100,8 @@ class Net:
             self.dB[l] = np.multiply(self.dL[l], ds)
             self.dW[l] = self.dB[l] * self.A[l-1].transpose()
 
+        return err
+
     def modWeights(self, stepSize = -0.01):
         """
         Modifies the weights and biases according to the given gradients and
@@ -112,7 +114,7 @@ class Net:
         
 
 def dSigmoid( x):
-    a = 2.0-sigmoid(x)
+    a = 1.0-sigmoid(x)
     b = sigmoid(x)
     return b.transpose()*a
 
