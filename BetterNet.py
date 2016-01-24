@@ -137,7 +137,8 @@ def main():
         toy.modWeights(stepSize=-0.01)
 
         result = toy.A[toy.L-1][0]
-        print("%f %f %f" % (result, tgt, abs((result - tgt))))
+    
+    print("%f %f %f" % (result, tgt, abs((result - tgt))))
 
     print("----------------End-----------------------------")
 
